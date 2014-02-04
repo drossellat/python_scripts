@@ -40,3 +40,4 @@ nosetests.xml
 .pydevproject
 >>>>>>> 8fcd26578ce4fa46892f0bf7bd3204cc4770369a
 *.log
+scrubjson.py
