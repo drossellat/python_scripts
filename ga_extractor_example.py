@@ -29,15 +29,10 @@ def main(argv):
       argv, 'analytics', 'v3', __doc__, __file__, parents=[argparser],
       scope='https://www.googleapis.com/auth/analytics.readonly')
 
-
-  #print flags
  # Try to make a request to the API. Print the results or handle errors.
   try:
     results = get_api_query(service, flags.table_id, flags.start_date, flags.end_date, flags.metrics).execute()
     print json.dumps(results)
-
-    #print json.dumps(results)
-    #print json.dumps(results)
 
   except TypeError, error:
     # Handle errors in constructing a query.
