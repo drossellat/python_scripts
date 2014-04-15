@@ -19,7 +19,7 @@ argparser.add_argument('-t', '--table_id',help='The table ID of the profile you 
 argparser.add_argument('-s','--start_date', help='the start date', required=True)
 argparser.add_argument('-e','--end_date', help='the end date', required=True)
 argparser.add_argument('-m','--metrics', help='metrics format is ga:xxxx', required=True)
-argparser.add_argument('-d','--dimensions', help='metrics format is ga:xxxx', required=False)
+argparser.add_argument('-d','--dimensions', help='dimensions format is ga:source, ga:keywords', required=False)
 
 
 def main(argv):
