@@ -19,7 +19,7 @@ argparser.add_argument('-t', '--table_id',help='The table ID of the profile you 
 argparser.add_argument('-s','--start_date', help='the start date', required=True)
 argparser.add_argument('-e','--end_date', help='the end date', required=True)
 argparser.add_argument('-m','--metrics', help='metrics format is ga:xxxx', required=True)
-
+argparser.add_argument('-d','--dimensions', help='metrics format is ga:xxxx', required=False)
 
 
 def main(argv):
@@ -28,10 +28,9 @@ def main(argv):
   service, flags = sample_tools.init(
       argv, 'analytics', 'v3', __doc__, __file__, parents=[argparser],
       scope='https://www.googleapis.com/auth/analytics.readonly')
-
  # Try to make a request to the API. Print the results or handle errors.
   try:
-    results = get_api_query(service, flags.table_id, flags.start_date, flags.end_date, flags.metrics).execute()
+    results = get_api_query(service, flags).execute()
     print json.dumps(results)
 
   except TypeError, error:
@@ -51,7 +50,7 @@ def main(argv):
 # def set_api_query(**kargs):
 #   #test
 
-def get_api_query(service, table_id, start_date, end_date, metrics):
+def get_api_query(service,flags):
   """Returns a query object to retrieve data from the Core Reporting API.
 
   Args:
@@ -60,11 +59,11 @@ def get_api_query(service, table_id, start_date, end_date, metrics):
   """
 
   return service.data().ga().get(
-      ids=table_id,
-      start_date=start_date,
-      end_date=end_date,
-      metrics=metrics,
-      #dimensions='ga:source,ga:keyword',
+      ids=flags.table_id,
+      start_date=flags.start_date,
+      end_date=flags.end_date,
+      metrics=flags.metrics,
+      dimensions=flags.dimensions,
       #sort='-ga:visits',
       #filters='ga:medium==organic',
       start_index='1',
