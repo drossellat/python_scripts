@@ -67,7 +67,7 @@ def get_api_query(service,flags):
       #sort='-ga:visits',
       #filters='ga:medium==organic',
       start_index='1',
-      max_results='25')
+      max_results='300')
 
 
 
