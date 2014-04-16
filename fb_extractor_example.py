@@ -14,19 +14,13 @@ import os
 # Hide deprecation warnings. The facebook module isn't that up-to-date (facebook.GraphAPIError).
 warnings.filterwarnings('ignore', category=DeprecationWarning)
 
-
-# Parameters of your app and the id of the profile you want to mess with.
-
 # Declare command-line params.
 argparser = argparse.ArgumentParser(description="FB data extractor",add_help=False)
 argparser.add_argument('-m', '--metrics',help='metrics you want to fetch, comma separated', required=True)
 
-
-
 def main(argv):
   
   #retrieve ultra-secret credentials fb_secrets.json 
-  
   curr_path = os.path.dirname(os.path.abspath(__file__))
   json_data=open(curr_path+'/fb_secrets.json')
   data = json.load(json_data)
