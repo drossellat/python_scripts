@@ -21,12 +21,13 @@ warnings.filterwarnings('ignore', category=DeprecationWarning)
 argparser = argparse.ArgumentParser(description="FB data extractor",add_help=False)
 argparser.add_argument('-m', '--metrics',help='metrics you want to fetch, comma separated', required=True)
 
-#cwd of script being run
-curr_path = os.path.dirname(os.path.abspath(__file__))
+
 
 def main(argv):
   
   #retrieve ultra-secret credentials fb_secrets.json 
+  
+  curr_path = os.path.dirname(os.path.abspath(__file__))
   json_data=open(curr_path+'/fb_secrets.json')
   data = json.load(json_data)
   facebook_app_id= data['app_id']
