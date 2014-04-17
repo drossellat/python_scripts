@@ -16,6 +16,7 @@ warnings.filterwarnings('ignore', category=DeprecationWarning)
 
 # Declare command-line params.
 argparser = argparse.ArgumentParser(description="FB data extractor",add_help=False)
+argparser.add_argument('-id', '--object_id',help='object id, can be app id, page id,etc ', required=True)
 argparser.add_argument('-m', '--metrics',help='metrics you want to fetch, comma separated', required=True)
 
 def main(argv):
@@ -54,7 +55,7 @@ def main(argv):
   json_data = {}
   for metric in metrics:
     try:
-        fb_response = facebook_graph.get_object('141217169407310/insights/%s' % metric)
+        fb_response = facebook_graph.get_object('%s/insights/%s' % (args.object_id, metric))
         json_data[metric]=fb_response['data']
         
     except facebook.GraphAPIError as e:
