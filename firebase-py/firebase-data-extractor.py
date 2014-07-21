@@ -12,7 +12,8 @@ argparser.add_argument('-dsn', '--dsn',help='your firebase DSN', required=True)
 argparser.add_argument('-email', '--email',help='your firebase email account', required=True)
 argparser.add_argument('-path', '--path',help='json snapshot', required=True)
 argparser.add_argument('-last', '--last',help='unix timestamp of last batch', required=False)
-#get all the metrics passed as args
+
+#get all the params passed as args
 args = argparser.parse_args()
 SECRET = args.key 
 DSN = args.dsn 
@@ -31,9 +32,7 @@ def retrieveLatestMessages(data):
             if type(data[d]) == dict:
                retrieveLatestMessages(data[d])
 
-
 def main(argv):
-
     authentication = FirebaseAuthentication(SECRET,EMAIL, True, True)
     firebase = FirebaseApplication(DSN, authentication)
     result=firebase.get(PATH, None)
