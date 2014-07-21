@@ -2,8 +2,6 @@ from firebase.firebase import FirebaseApplication, FirebaseAuthentication
 import argparse
 import sys
 import json
-import time
-import datetime
 
 # Declare command-line params.
 argparser = argparse.ArgumentParser(description="Firebase data extractor",add_help=False)
