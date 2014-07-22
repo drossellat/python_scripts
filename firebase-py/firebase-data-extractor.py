@@ -19,22 +19,37 @@ EMAIL = args.email
 PATH = args.path
 LAST = args.last
 
-def retrieveLatestMessages(data):
+#returns new line delimited json objects for chat messages older than arg -last=unix_timestamp
+def retrieveChatMessagesByTimestamp(data):
    if type(data) == dict:
-      if data.has_key('room_id') and data.has_key('type'):
-         unix_timestamp = str(data['date'])[0:-3]
+      # is json a chat message or a room
+      if data.has_key('room_id') or data.has_key('createdByUserName'):
+        #message json only has a 'date' key/pair - room json has a 'createdAt' date key/pair
+         unix_timestamp = str(data['date'])[0:-3] if data.has_key('date') else str(data['createdAt'])[0:-3]
          if float(unix_timestamp) > float(LAST):
-            print json.dumps(data)
+            print json.dumps(transform(data))
       else:
          for d in data:
             if type(data[d]) == dict:
-               retrieveLatestMessages(data[d])
+               retrieveChatMessagesByTimestamp(data[d])
 
+
+#if json is a chat message,then stringify its 'data' embedded JSON 
+#if json is a room, then return total no. of authorized users in lieu of embedded JSON authorizedUsers
+def transform(data):
+  if data.has_key('data'):
+    jsonString = str(json.dumps(data['data']))
+    data['data'] = jsonString
+  elif data.has_key('authorizedUsers'):
+    data['authorizedUsers']= len(data['authorizedUsers'].keys())
+  return data
+
+#main 
 def main(argv):
     authentication = FirebaseAuthentication(SECRET,EMAIL, True, True)
     firebase = FirebaseApplication(DSN, authentication)
     result=firebase.get(PATH, None)
-    retrieveLatestMessages(result)
+    retrieveChatMessagesByTimestamp(result)
 
 
 
