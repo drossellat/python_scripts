@@ -23,7 +23,7 @@ LAST = args.last
 
 def retrieveLatestMessages(data):
    if type(data) == dict:
-      if data.has_key('room_id') and data['type']=='plain':
+      if data.has_key('room_id') and data.has_key('type'):
          unix_timestamp = str(data['date'])[0:-3]
          if float(unix_timestamp) > float(LAST):
             print json.dumps(data)
