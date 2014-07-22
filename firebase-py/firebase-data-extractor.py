@@ -9,7 +9,7 @@ argparser.add_argument('-key', '--key',help='the secret key', required=True)
 argparser.add_argument('-dsn', '--dsn',help='your firebase DSN', required=True)
 argparser.add_argument('-email', '--email',help='your firebase email account', required=True)
 argparser.add_argument('-path', '--path',help='json snapshot', required=True)
-argparser.add_argument('-last', '--last',help='unix timestamp of last batch', required=False)
+argparser.add_argument('-last', '--last',help='unix timestamp of last batch', required=True)
 
 #get all the params passed as args
 args = argparser.parse_args()
