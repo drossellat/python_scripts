@@ -27,7 +27,6 @@ def retrieveChatMessagesByTimestamp(data):
         #message json only has a 'date' key/pair - room json has a 'createdAt' date key/pair
          unix_timestamp = str(data['date'])[0:-3] if data.has_key('date') else str(data['createdAt'])[0:-3]
          if float(unix_timestamp) > float(LAST):
-            data['date'] = unix_timestamp
             print json.dumps(transform(data))
       else:
          for d in data:
@@ -35,13 +34,19 @@ def retrieveChatMessagesByTimestamp(data):
                retrieveChatMessagesByTimestamp(data[d])
 
 
-#if json is a chat message,then stringify its 'data' embedded JSON 
-#if json is a room, then return total no. of authorized users in lieu of embedded JSON authorizedUsers
+#if json is a chat message,then stringify its 'data' embedded JSON, and clean up the timestamp
+#if json is a room, then return total no. of authorized users in lieu of embedded JSON authorizedUsers, and clean up the timestamp
 def transform(data):
+  if data.has_key('date'):
+    unix_timestamp = str(data['date'])[0:-3]
+    data['date'] = unix_timestamp
+  
   if data.has_key('data'):
     jsonString = str(json.dumps(data['data']))
     data['data'] = jsonString
   elif data.has_key('authorizedUsers'):
+    unix_timestamp = str(data['createdAt'])[0:-3]
+    data['createdAt'] = unix_timestamp
     data['authorizedUsers']= len(data['authorizedUsers'].keys())
   return data
 
