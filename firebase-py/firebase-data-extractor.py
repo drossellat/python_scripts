@@ -27,6 +27,7 @@ def retrieveChatMessagesByTimestamp(data):
         #message json only has a 'date' key/pair - room json has a 'createdAt' date key/pair
          unix_timestamp = str(data['date'])[0:-3] if data.has_key('date') else str(data['createdAt'])[0:-3]
          if float(unix_timestamp) > float(LAST):
+            data['date'] = unix_timestamp
             print json.dumps(transform(data))
       else:
          for d in data:
