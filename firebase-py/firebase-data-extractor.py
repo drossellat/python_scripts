@@ -47,7 +47,7 @@ def transform(data):
   elif data.has_key('authorizedUsers'):
     unix_timestamp = str(data['createdAt'])[0:-3]
     data['createdAt'] = unix_timestamp
-    data['authorizedUsers']= len(data['authorizedUsers'].keys())
+    data['authorizedUsers']= data['authorizedUsers']
   return data
 
 #main 
