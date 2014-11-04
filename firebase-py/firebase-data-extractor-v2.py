@@ -10,32 +10,45 @@ import logging
 import ijson 
 import re
 import decimal
+import boto
+from boto.s3.connection import S3Connection
+
 # Declare command-line params.
 argparser = argparse.ArgumentParser(description="Firebase data extractor",add_help=False)
-argparser.add_argument('-key', '--key',help='the secret key', required=True)
-argparser.add_argument('-dsn', '--dsn',help='your firebase DSN', required=True)
-argparser.add_argument('-email', '--email',help='your firebase email account', required=True)
+argparser.add_argument('-id', '--id',help='the access key', required=True)
+argparser.add_argument('-secret', '--secret',help='the secret key', required=True)
+#argparser.add_argument('-dsn', '--dsn',help='your firebase DSN', required=True)
+#argparser.add_argument('-email', '--email',help='your firebase email account', required=True)
 argparser.add_argument('-path', '--path',help='json snapshot', required=True)
 argparser.add_argument('-last', '--last',help='unix timestamp of last batch', required=True)
 
 #get all the params passed as args
 args = argparser.parse_args()
-SECRET = args.key 
-DSN = args.dsn 
-EMAIL = args.email 
+ID = args.id
+SECRET = args.secret 
+#DSN = args.dsn 
+#EMAIL = args.email 
 PATH = args.path
 LAST = args.last
-
+FILENAME = "latest.json"
 
 #main 
 def main(argv):
-    firebaseURL = DSN + '/' + PATH + '.json?auth=' + SECRET #"https://mychat-staging.firebaseio.com/mychat/chat-messages/.json?auth=xxxxx"
+    #firebaseURL = DSN + '/' + PATH + '.json?auth=' + SECRET #"https://mychat-staging.firebaseio.com/mychat/chat-messages/.json?auth=xxxxx"
     #firebaseURL2 = "https://mychat-staging.firebaseio.com/mychat/rooms/.json?auth=xxxxx"
-    print firebaseURL
-    if 'messages' in firebaseURL:
-      parseMessages(firebaseURL)
+
+    if 'messages' in PATH:
+      parseMessages()
     else:
-      parseRooms(firebaseURL)
+      parseRooms()
+
+def downloadFile():
+   conn = S3Connection(ID,SECRET)
+   bucket = conn.lookup('backup.mysquar.com')
+
+   l = [(k.last_modified, k) for k in bucket if k.name.find('.json')!=-1]
+   key_to_download=sorted(l, cmp=lambda x,y: cmp(x[0], y[0]))[-1][1]
+   key_to_download.get_contents_to_filename(FILENAME)
 
 def valid_uuid(uuid):
   regex = re.compile('(pr-)*[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}\Z', re.I)
@@ -52,13 +65,16 @@ def cleanDate(val):
   val = str(val)[0:-3]
   return val
 
+def getJsonFile():
+   downloadFile()
+   curr_path = os.path.dirname(os.path.abspath(__file__))
+   json_data=open(curr_path+'/'+FILENAME)
+   f = ijson.parse(json_data)
+   return f
 
-def parseMessages(fURL):
-  #f = urllib2.urlopen(fURL)
-  f = ijson.parse(urllib2.urlopen(fURL))
-  #f = ijson.parse(open("/Users/ADMIN/Downloads/mychat-staging-chat-messages-export.json", "r"))
-  #f = ijson.parse(open("/Users/ADMIN/Downloads/prod-chat-messages.json", "r"))
-  #print f.read()
+def parseMessages():
+  f=getJsonFile()
+
   mapKey = False
   unix_timestamp = 0
   data = False
@@ -105,9 +121,8 @@ def parseMessages(fURL):
           unix_timestamp = 0
           authorizedUsers = False
 
-def parseRooms(fURL):
-  f = ijson.parse(urllib2.urlopen(fURL))
-  #f = ijson.parse(open("/Users/ADMIN/Downloads/mychat-staging-rooms-export.json", "r"))
+def parseRooms():
+  f=getJsonFile()
   unix_timestamp = 0
   a = {}
   authorizedUsersDic = {}
