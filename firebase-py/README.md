@@ -6,7 +6,6 @@ git clone https://github.com/gholadr/python_scripts.git
 cd python_scripts/firebase-py
 virtualenv .
 source ./bin/activate
-pip install requests
 pip install python-firebase
 ```
 
