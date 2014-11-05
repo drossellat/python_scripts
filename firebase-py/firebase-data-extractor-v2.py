@@ -26,17 +26,13 @@ argparser.add_argument('-last', '--last',help='unix timestamp of last batch', re
 args = argparser.parse_args()
 ID = args.id
 SECRET = args.secret 
-#DSN = args.dsn 
-#EMAIL = args.email 
 PATH = args.path
 LAST = args.last
 FILENAME = "latest.json"
+DSN = "backup.mysquar.com"
 
 #main 
 def main(argv):
-    #firebaseURL = DSN + '/' + PATH + '.json?auth=' + SECRET #"https://mychat-staging.firebaseio.com/mychat/chat-messages/.json?auth=xxxxx"
-    #firebaseURL2 = "https://mychat-staging.firebaseio.com/mychat/rooms/.json?auth=xxxxx"
-
     if 'messages' in PATH:
       parseMessages()
     else:
@@ -44,7 +40,7 @@ def main(argv):
 
 def downloadFile():
    conn = S3Connection(ID,SECRET)
-   bucket = conn.lookup('backup.mysquar.com')
+   bucket = conn.lookup(DSN)
 
    l = [(k.last_modified, k) for k in bucket if k.name.find('.json')!=-1]
    key_to_download=sorted(l, cmp=lambda x,y: cmp(x[0], y[0]))[-1][1]
@@ -73,8 +69,8 @@ def getJsonFile():
    return f
 
 def parseMessages():
+  #f = ijson.parse(open("/Users/ADMIN/Downloads/prod-chat-messages.json", "r"))
   f=getJsonFile()
-
   mapKey = False
   unix_timestamp = 0
   data = False
@@ -82,7 +78,8 @@ def parseMessages():
   a = {}
   for prefix, event, value in f:
     #print("prefix:%s, event:%s, value:%s" % (prefix, event, value))
-    #print("event:%s / value:%s" % (event, value))
+    if 'chat-messages' not in prefix:
+      continue
     if mapKey:
       count = prefix.count('.') 
       if count > 0 and not valid_uuid(prefix.split(".")[count]):
@@ -93,7 +90,6 @@ def parseMessages():
             a['data'][key]= value
           else:
             a['data'] = {key:value}
-          #print "adding data:", a['data']
 
         if (key == 'data' or 'authorizedUsers') and event == 'start_map':
           data = True
@@ -128,7 +124,8 @@ def parseRooms():
   authorizedUsersDic = {}
   authorizedUsers = False
   for prefix, event, value in f:
-    #print("prefix:%s, event:%s, value:%s" % (prefix, event, value))
+    if 'room' not in prefix:
+      continue
     count = prefix.count('.')
     key = prefix.split(".")[count] if count > 0 and not valid_uuid(prefix.split(".")[count]) else None
     uuid = True if count == 0 and  valid_uuid(prefix) else False
