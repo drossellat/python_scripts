@@ -52,9 +52,11 @@ def valid_uuid(uuid):
   return bool(match)
 
 def cleanValue(val):
- if isinstance(val, (decimal.Decimal, bool)) or val is None:
+  if isinstance(val, decimal.Decimal) or val is None:
   return str(val)
- else:
+  elif isinstance(val, bool):
+   return val
+  else:
   return val.encode('utf-8').strip()
 
 def cleanDate(val):
