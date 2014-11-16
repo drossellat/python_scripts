@@ -7,7 +7,7 @@ import time
 import datetime
 import os
 import logging
-import ijson 
+import ijson
 import re
 import decimal
 import boto
@@ -25,26 +25,26 @@ argparser.add_argument('-last', '--last',help='unix timestamp of last batch', re
 #get all the params passed as args
 args = argparser.parse_args()
 ID = args.id
-SECRET = args.secret 
+SECRET = args.secret
 PATH = args.path
 LAST = args.last
 FILENAME = "latest.json"
 DSN = "backup.mysquar.com"
 
-#main 
+#main
 def main(argv):
-    if 'messages' in PATH:
-      parseMessages()
-    else:
-      parseRooms()
+  if 'messages' in PATH:
+    parseMessages()
+  else:
+    parseRooms()
 
 def downloadFile():
-   conn = S3Connection(ID,SECRET)
-   bucket = conn.lookup(DSN)
+  conn = S3Connection(ID,SECRET)
+  bucket = conn.lookup(DSN)
 
-   l = [(k.last_modified, k) for k in bucket if k.name.find('.json')!=-1]
-   key_to_download=sorted(l, cmp=lambda x,y: cmp(x[0], y[0]))[-1][1]
-   key_to_download.get_contents_to_filename(FILENAME)
+  l = [(k.last_modified, k) for k in bucket if k.name.find('.json')!=-1]
+  key_to_download=sorted(l, cmp=lambda x,y: cmp(x[0], y[0]))[-1][1]
+  key_to_download.get_contents_to_filename(FILENAME)
 
 def valid_uuid(uuid):
   regex = re.compile('(pr-)*[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}\Z', re.I)
@@ -53,22 +53,22 @@ def valid_uuid(uuid):
 
 def cleanValue(val):
   if isinstance(val, decimal.Decimal) or val is None:
-  return str(val)
+    return str(val)
   elif isinstance(val, bool):
-   return val
+    return val
   else:
-  return val.encode('utf-8').strip()
+    return val.encode('utf-8').strip()
 
 def cleanDate(val):
   val = str(val)[0:-3]
   return val
 
 def getJsonFile():
-   downloadFile()
-   curr_path = os.path.dirname(os.path.abspath(__file__))
-   json_data=open(curr_path+'/'+FILENAME)
-   f = ijson.parse(json_data)
-   return f
+  downloadFile()
+  curr_path = os.path.dirname(os.path.abspath(__file__))
+  json_data=open(curr_path+'/'+FILENAME)
+  f = ijson.parse(json_data)
+  return f
 
 def parseMessages():
   #f = ijson.parse(open("/Users/ADMIN/Downloads/prod-chat-messages.json", "r"))
@@ -83,7 +83,7 @@ def parseMessages():
     if 'chat-messages' not in prefix:
       continue
     if mapKey:
-      count = prefix.count('.') 
+      count = prefix.count('.')
       if count > 0 and not valid_uuid(prefix.split(".")[count]):
         key = prefix.split(".")[count]
         value=cleanValue(value)
@@ -101,19 +101,19 @@ def parseMessages():
 
         if key == "date" or key == "createdAt":
           value = unix_timestamp = cleanDate(value)
-        
+
         if not data and (key != 'data' and key != 'priority'):
           #print " key:%s  value:%s" %(key, value.decode('utf-8'))
           a[key] = value
         #print "key: %s  value:%s" % (key, value.decode('utf-8'))
     if (event) == ('map_key') and (valid_uuid(value)) == True:
       mapKey = True
-      
+
     if event == ('end_map'):
       mapKey = True
       if a and float(unix_timestamp) > float(LAST):
-          if 'data' in a:
-            a['data'] = json.dumps(a['data'])
+        if 'data' in a:
+          a['data'] = json.dumps(a['data'])
           print json.dumps(a)
           a= {}
           unix_timestamp = 0
@@ -134,16 +134,16 @@ def parseRooms():
 
     if key is not None and key != 'authorizedUsers' and key !='createdAt' and event != 'map_key' and value != 'None': #entering Node?
       a[key]= cleanValue(value)
-    
+
     if key == 'createdAt': #cleaning date format (only 10 digits)
-        a[key] = value = unix_timestamp = cleanDate(value)
-    
+      a[key] = value = unix_timestamp = cleanDate(value)
+
     if key == 'authorizedUsers' and event == 'map_key' and valid_uuid(value): #entering authorizedUsers node
       authorizedUsers = True
     if authorizedUsers and key is not None and key != 'authorizedUsers' and key !='createdAt' and event != 'map_key' and value != 'None': #adding authorizedUsers key/value pairs
       authorizedUsersDic[key] = cleanValue(value)
-    
-    if authorizedUsers and event == 'end_map': #leaving authorizedUsers node 
+
+    if authorizedUsers and event == 'end_map': #leaving authorizedUsers node
       if 'authorizedUsers' in a:
         a['authorizedUsers'].append(json.dumps(authorizedUsersDic))
       else:
@@ -154,7 +154,7 @@ def parseRooms():
 
     if uuid  and event == 'end_map' and value == None: #end of node
       if a and float(unix_timestamp) > float(LAST): #skip stdout if timestamp only if timestamp is greater than LAST
-           print json.dumps(a)
+        print json.dumps(a)
       a= {}
       unix_timestamp = 0
 
