@@ -102,7 +102,7 @@ def parseMessages():
         if key == "date" or key == "createdAt":
           value = unix_timestamp = cleanDate(value)
 
-        if not data and (key != 'data' and key != 'priority'):
+        if not data and (key != 'data' and key != 'priority' and key != 'chat-messages'):
           #print " key:%s  value:%s" %(key, value.decode('utf-8'))
           a[key] = value
         #print "key: %s  value:%s" % (key, value.decode('utf-8'))
@@ -126,7 +126,7 @@ def parseRooms():
   authorizedUsersDic = {}
   authorizedUsers = False
   for prefix, event, value in f:
-    if 'room' not in prefix:
+    if 'rooms' not in prefix:
       continue
     count = prefix.count('.')
     key = prefix.split(".")[count] if count > 0 and not valid_uuid(prefix.split(".")[count]) else None
