@@ -59,6 +59,7 @@ def cleanValue(val):
   else:
     return val.encode('utf-8').strip()
 
+
 def cleanDate(val):
   val = str(val)[0:-3]
   return val
@@ -76,47 +77,35 @@ def getJsonFile():
 
 def parseMessages():
   f=getJsonFile()
-  mapKey = False
-  unix_timestamp = 0
-  data = False
-  authorizedUsers = False
-  a = {}
+  chatArray, dataArray = {}, {}
+  beforeLAST = False
   for prefix, event, value in f:
-    if 'chat-messages' not in prefix:
+    if '.chat-messages' not in prefix:
       continue
-    if mapKey:
-      count = prefix.count('.')
-      if count > 0 and not valid_uuid(prefix.split(".")[count]):
-        key = prefix.split(".")[count]
-        value=cleanValue(value)
-        if data and event not in ("map_key","start_map","end_map"):
-          if 'data' in a:
-            a['data'][key]= value
-          else:
-            a['data'] = {key:value}
+    nodeCount = prefix.count('.')
+    currentKey = value if nodeCount >= 3 and event == 'map_key' and value != '.priority' and value != None else None
+    if currentKey:
+      currentValue = getValue(currentKey,f)
+      if currentKey == "date" or  currentKey == "createdAt":
+        #print "timestamp, v, last, bool", cleanDate(currentValue), float(LAST), float(cleanDate(currentValue)) < float(LAST)
+        if float(cleanDate(currentValue)) > float(LAST): 
+          beforeLAST = True
+          currentValue = cleanDate(currentValue)
+      if '.data' in prefix and cleanValue(currentValue) is not None:
+        dataArray[currentKey] = cleanValue(currentValue)
+      else:
+        chatArray[currentKey] =  cleanValue(currentValue)
+    
+    if event == 'end_map' and '.data' not in prefix and chatArray and beforeLAST:
+      if dataArray:
+        chatArray['data'] = json.dumps(dataArray)
+      print json.dumps(chatArray)
+      chatArray, dataArray = {}, {}
+      beforeLAST = False
 
-        if (key == 'data' or 'authorizedUsers') and event == 'start_map':
-          data = True
-        if key == 'data' and event == 'end_map':
-          data = False
-
-        if key == "date" or key == "createdAt":
-          value = unix_timestamp = cleanDate(value)
-
-        if not data and (key != 'data' and key != 'priority' and key != 'chat-messages'):
-          a[key] = value
-    if (event) == ('map_key') and (valid_uuid(value)) == True:
-      mapKey = True
-
-    if event == ('end_map'):
-      mapKey = True
-      if a and float(unix_timestamp) > float(LAST):
-        if 'data' in a:
-          a['data'] = json.dumps(a['data'])
-          print json.dumps(a)
-          a= {}
-          unix_timestamp = 0
-          authorizedUsers = False
+def getValue(currentKey, f):
+  for prefix, event, value in f:
+      return value
 
 def parseRooms():
   f=getJsonFile()
