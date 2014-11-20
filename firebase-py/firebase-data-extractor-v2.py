@@ -78,7 +78,7 @@ def getJsonFile():
 def parseMessages():
   f=getJsonFile()
   chatArray, dataArray = {}, {}
-  beforeLAST = False
+  afterLAST = False
   for prefix, event, value in f:
     if '.chat-messages' not in prefix:
       continue
@@ -89,19 +89,19 @@ def parseMessages():
       if currentKey == "date" or  currentKey == "createdAt":
         #print "timestamp, v, last, bool", cleanDate(currentValue), float(LAST), float(cleanDate(currentValue)) < float(LAST)
         if float(cleanDate(currentValue)) > float(LAST): 
-          beforeLAST = True
+          afterLAST = True
           currentValue = cleanDate(currentValue)
       if '.data' in prefix and cleanValue(currentValue) is not None:
         dataArray[currentKey] = cleanValue(currentValue)
       else:
         chatArray[currentKey] =  cleanValue(currentValue)
     
-    if event == 'end_map' and '.data' not in prefix and chatArray and beforeLAST:
+    if event == 'end_map' and '.data' not in prefix and chatArray and afterLAST:
       if dataArray:
         chatArray['data'] = json.dumps(dataArray)
       print json.dumps(chatArray)
       chatArray, dataArray = {}, {}
-      beforeLAST = False
+      afterLAST = False
 
 def getValue(currentKey, f):
   for prefix, event, value in f:
