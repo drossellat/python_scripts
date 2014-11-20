@@ -36,3 +36,10 @@ python firebase-data-extractor.py -id=AWS_ACCESS_KEY -secret=AWS_SECRET_KEY -pat
 
 ```
 
+##### run the script locally with local file
+
+
+```shell
+python firebase-data-extractor.py -id=0 -secret=0 -local=/path/to/local/file -path='path' -last=10-digit-unix-timestamp
+
+```
