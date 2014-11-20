@@ -17,8 +17,7 @@ from boto.s3.connection import S3Connection
 argparser = argparse.ArgumentParser(description="Firebase data extractor",add_help=False)
 argparser.add_argument('-id', '--id',help='the access key', required=True)
 argparser.add_argument('-secret', '--secret',help='the secret key', required=True)
-#argparser.add_argument('-dsn', '--dsn',help='your firebase DSN', required=True)
-#argparser.add_argument('-email', '--email',help='your firebase email account', required=True)
+argparser.add_argument('-local', '--local',help='to use local file', required=False)
 argparser.add_argument('-path', '--path',help='json snapshot', required=True)
 argparser.add_argument('-last', '--last',help='unix timestamp of last batch', required=True)
 
@@ -30,6 +29,7 @@ PATH = args.path
 LAST = args.last
 FILENAME = "latest.json"
 DSN = "backup.mysquar.com"
+LOCAL = args.local
 
 #main
 def main(argv):
@@ -64,14 +64,17 @@ def cleanDate(val):
   return val
 
 def getJsonFile():
-  downloadFile()
-  curr_path = os.path.dirname(os.path.abspath(__file__))
-  json_data=open(curr_path+'/'+FILENAME)
-  f = ijson.parse(json_data)
+  if LOCAL == None:
+    downloadFile()
+    curr_path = os.path.dirname(os.path.abspath(__file__))
+    json_data=open(curr_path+'/'+FILENAME)
+  else:
+    json_data=open(LOCAL)
+
+  f = ijson.parse(json_data)  
   return f
 
 def parseMessages():
-  #f = ijson.parse(open("/Users/ADMIN/Downloads/prod-chat-messages.json", "r"))
   f=getJsonFile()
   mapKey = False
   unix_timestamp = 0
@@ -79,7 +82,6 @@ def parseMessages():
   authorizedUsers = False
   a = {}
   for prefix, event, value in f:
-    #print("prefix:%s, event:%s, value:%s" % (prefix, event, value))
     if 'chat-messages' not in prefix:
       continue
     if mapKey:
@@ -97,15 +99,12 @@ def parseMessages():
           data = True
         if key == 'data' and event == 'end_map':
           data = False
-          #a['data'] = json.dumps(a['data'])
 
         if key == "date" or key == "createdAt":
           value = unix_timestamp = cleanDate(value)
 
         if not data and (key != 'data' and key != 'priority' and key != 'chat-messages'):
-          #print " key:%s  value:%s" %(key, value.decode('utf-8'))
           a[key] = value
-        #print "key: %s  value:%s" % (key, value.decode('utf-8'))
     if (event) == ('map_key') and (valid_uuid(value)) == True:
       mapKey = True
 
@@ -126,13 +125,12 @@ def parseRooms():
   authorizedUsersDic = {}
   authorizedUsers = False
   for prefix, event, value in f:
-    if 'rooms' not in prefix:
+    if '.rooms' not in prefix:
       continue
     count = prefix.count('.')
     key = prefix.split(".")[count] if count > 0 and not valid_uuid(prefix.split(".")[count]) else None
-    uuid = True if count == 0 and  valid_uuid(prefix) else False
-
-    if key is not None and key != 'authorizedUsers' and key !='createdAt' and event != 'map_key' and value != 'None': #entering Node?
+    uuid = True if valid_uuid(prefix.split(".")[count]) else False
+    if key is not None and key != 'authorizedUsers' and key !='createdAt' and authorizedUsers is not True and event != 'map_key' and value != 'None': #entering Node?
       a[key]= cleanValue(value)
 
     if key == 'createdAt': #cleaning date format (only 10 digits)
@@ -140,19 +138,23 @@ def parseRooms():
 
     if key == 'authorizedUsers' and event == 'map_key' and valid_uuid(value): #entering authorizedUsers node
       authorizedUsers = True
+      
     if authorizedUsers and key is not None and key != 'authorizedUsers' and key !='createdAt' and event != 'map_key' and value != 'None': #adding authorizedUsers key/value pairs
+      #print key, value
       authorizedUsersDic[key] = cleanValue(value)
 
     if authorizedUsers and event == 'end_map': #leaving authorizedUsers node
+       
       if 'authorizedUsers' in a:
         a['authorizedUsers'].append(json.dumps(authorizedUsersDic))
       else:
         a['authorizedUsers'] = []
         a['authorizedUsers'].append(json.dumps(authorizedUsersDic))
+      #print "authorized Users ",  a
       authorizedUsers = False
       authorizedUsersDic = {}
-
-    if uuid  and event == 'end_map' and value == None: #end of node
+    if uuid  and count < 3 and event == 'end_map' and value == None: #end of node
+      #print "k,p,c,e,v,u,ts", key, prefix, count, event, value, uuid, unix_timestamp
       if a and float(unix_timestamp) > float(LAST): #skip stdout if timestamp only if timestamp is greater than LAST
         print json.dumps(a)
       a= {}
