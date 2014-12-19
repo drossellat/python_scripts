@@ -98,7 +98,7 @@ def parseMessages():
     
     if event == 'end_map' and '.data' not in prefix and chatArray and afterLAST:
       if dataArray:
-        chatArray['data'] = json.dumps(dataArray)
+        chatArray['data'] = dataArray
       print json.dumps(chatArray)
       chatArray, dataArray = {}, {}
       afterLAST = False
@@ -135,10 +135,10 @@ def parseRooms():
     if authorizedUsers and event == 'end_map': #leaving authorizedUsers node
        
       if 'authorizedUsers' in a:
-        a['authorizedUsers'].append(json.dumps(authorizedUsersDic))
+        a['authorizedUsers'].append(authorizedUsersDic)
       else:
         a['authorizedUsers'] = []
-        a['authorizedUsers'].append(json.dumps(authorizedUsersDic))
+        a['authorizedUsers'].append(authorizedUsersDic)
       #print "authorized Users ",  a
       authorizedUsers = False
       authorizedUsersDic = {}
